@@ -1,0 +1,5 @@
+
+// enter your API Gateway URL
+@URL=https://<#####>.execute-api.<####>.amazonaws.com/prod/
+
+GET {{URL}} HTTP/1.1
