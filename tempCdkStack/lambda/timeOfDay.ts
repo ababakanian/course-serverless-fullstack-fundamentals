@@ -33,13 +33,24 @@ export const index: lambda.APIGatewayProxyHandler = async function (
 
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "*",
+      },
       body: JSON.stringify(rtnDate),
     };
   } catch (e: any) {
     console.error(e);
     return {
       statusCode: 500,
-      body: e.toString(),
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
+        "Access-Control-Allow-Headers": "*",
+      },
+      body: JSON.stringify(e.toString()),
     };
   }
 };
