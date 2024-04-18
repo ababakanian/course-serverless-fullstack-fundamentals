@@ -1,0 +1,4 @@
+{
+  "name": "@sff/shared-types",
+  "types": "./src/index.d.ts"
+}

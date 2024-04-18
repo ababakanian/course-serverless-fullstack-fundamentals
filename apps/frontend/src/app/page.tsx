@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { ITranslateRequest, ITranslateResponse } from "@sff/shared-types";
 
 const URL = "https://uq8tjcg2n9.execute-api.us-west-1.amazonaws.com/prod/";
 
@@ -12,23 +13,31 @@ export const translateText = async ({
   inputText: string;
   outputLang: string;
 }) => {
-  return fetch(`${URL}`, {
-    method: "POST",
-    body: JSON.stringify({
+  try {
+    const request: ITranslateRequest = {
       sourceLang: inputLang,
       targetLang: outputLang,
-      text: inputText,
-    }),
-  })
-    .then((response) => response.json())
-    .catch((e) => e.toString());
+      sourceText: inputText,
+    };
+
+    const result = await fetch(`${URL}`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    const rtnValue = (await result.json()) as ITranslateResponse;
+    return rtnValue;
+  } catch (e: any) {
+    console.error(e);
+    throw e;
+  }
 };
 
 export default function Home() {
-  const [inputLang, setInputLang] = useState("");
-  const [outputLang, setOutputLang] = useState("");
-  const [inputText, setInputText] = useState("");
-  const [outputText, setOutputText] = useState("");
+  const [inputLang, setInputLang] = useState<string>("");
+  const [outputLang, setOutputLang] = useState<string>("");
+  const [inputText, setInputText] = useState<string>("");
+  const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
 
   return (
     <main className="flex flex-col m-8">

@@ -1,5 +1,6 @@
 import * as clientTranslate from "@aws-sdk/client-translate";
 import * as lambda from "aws-lambda";
+import { ITranslateRequest, ITranslateResponse } from "@sff/shared-types";
 
 const translateClient = new clientTranslate.TranslateClient({});
 
@@ -10,9 +11,21 @@ export const index: lambda.APIGatewayProxyHandler = async function (
     if (!event.body) {
       throw new Error("body is missing");
     }
+    console.log(event.body);
 
-    let body = JSON.parse(event.body);
-    const { sourceLang, targetLang, text } = body;
+    let body = JSON.parse(event.body) as ITranslateRequest;
+
+    if (!body.sourceLang) {
+      throw new Error("sourceLang is missing");
+    }
+    if (!body.targetLang) {
+      throw new Error("targetLang is missing");
+    }
+    if (!body.sourceText) {
+      throw new Error("sourceText is missing");
+    }
+
+    const { sourceLang, targetLang, sourceText } = body;
 
     const now = new Date(Date.now()).toString();
     console.log(now);
@@ -20,15 +33,19 @@ export const index: lambda.APIGatewayProxyHandler = async function (
     const translateCommand = new clientTranslate.TranslateTextCommand({
       SourceLanguageCode: sourceLang,
       TargetLanguageCode: targetLang,
-      Text: text,
+      Text: sourceText,
     });
 
     const result = await translateClient.send(translateCommand);
     console.log(result);
 
-    const rtnDate = {
+    if (!result.TranslatedText) {
+      throw new Error("translation is empty");
+    }
+
+    const rtnDate: ITranslateResponse = {
       timestamp: now,
-      text: result.TranslatedText,
+      targetText: result.TranslatedText,
     };
 
     return {
