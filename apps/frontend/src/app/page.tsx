@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-const URL = "https://<your rest api>.execute-api.us-west-1.amazonaws.com/prod/";
+const URL = "https://uq8tjcg2n9.execute-api.us-west-1.amazonaws.com/prod/";
 
 export const translateText = async ({
   inputLang,

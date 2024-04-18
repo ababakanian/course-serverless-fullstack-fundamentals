@@ -1,5 +1,5 @@
 {
-  "name": "temp_cdk_stack",
+  "name": "@sff/infrastructure",
   "version": "0.1.0",
   "bin": {
     "temp_cdk_stack": "bin/temp_cdk_stack.js"

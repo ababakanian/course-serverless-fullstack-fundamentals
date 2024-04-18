@@ -1,0 +1,12 @@
+{
+  "name": "course-serverless-fullstack-fundamentals",
+  "scripts": {
+    "frontend-dev": "npm run dev --workspace=@sff/frontend",
+    "deploy": "cd infrastructure; cdk deploy -f --require-approval never"
+  },
+  "workspaces": [
+    "apps/*",
+    "infrastructure",
+    "packages/*"
+  ]
+}
