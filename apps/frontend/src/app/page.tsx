@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
-import { ITranslateRequest, ITranslateResponse } from "@sff/shared-types";
+import {
+  ITranslateDbObject,
+  ITranslateRequest,
+  ITranslateResponse,
+} from "@sff/shared-types";
 
 const URL = "https://a19wfj5e96.execute-api.us-west-1.amazonaws.com/prod";
 
@@ -33,11 +37,28 @@ export const translateText = async ({
   }
 };
 
+export const getTranslations = async () => {
+  try {
+    const result = await fetch(URL, {
+      method: "GET",
+    });
+
+    const rtnValue = (await result.json()) as Array<ITranslateDbObject>;
+    return rtnValue;
+  } catch (e: any) {
+    console.error(e);
+    throw e;
+  }
+};
+
 export default function Home() {
   const [inputLang, setInputLang] = useState<string>("");
   const [outputLang, setOutputLang] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
   const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
+  const [translations, setTranslations] = useState<Array<ITranslateDbObject>>(
+    []
+  );
 
   return (
     <main className="flex flex-col m-8">
@@ -94,6 +115,36 @@ export default function Home() {
         <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
           {JSON.stringify(outputText, null, 2)}
         </pre>
+      </div>
+
+      <button
+        className="btn bg-blue-500"
+        type="button"
+        onClick={async () => {
+          const rtnValue = await getTranslations();
+          setTranslations(rtnValue);
+        }}
+      >
+        getTranslations
+      </button>
+      <div>
+        <p>Result:</p>
+        <pre>
+          {translations.map((item) => (
+            <div>
+              <p>
+                {item.sourceLang}/{item.sourceText}
+              </p>
+              <p>
+                {item.targetLang}/{item.targetText}
+              </p>
+            </div>
+          ))}
+        </pre>
+
+        {/* <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
+          {JSON.stringify(translations, null, 2)}
+        </pre> */}
       </div>
     </main>
   );

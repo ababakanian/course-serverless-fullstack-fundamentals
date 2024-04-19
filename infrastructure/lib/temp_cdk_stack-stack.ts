@@ -44,25 +44,49 @@ export class TempCdkStackStack extends cdk.Stack {
       path.join(lambdasDirPath, "translate/index.ts")
     );
 
-    const lambdaFunc = new lambdaNodeJs.NodejsFunction(this, "thisOfDay", {
-      entry: translateLambdaPath,
-      handler: "index",
-      runtime: lambda.Runtime.NODEJS_20_X,
-      initialPolicy: [translateServicePolicy, translateTablePolicy],
-      environment: {
-        TRANSLATION_TABLE_NAME: table.tableName,
-        TRANSLATION_PARTITION_KEY: "requestId",
-      },
-    });
-
+    // top level api gateway construct
     const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
 
-    // granting read and write access to our dynamoDb table
-    // table.grantReadWriteData(lambdaFunc);
+    // the translation lambda
+    const translateLambda = new lambdaNodeJs.NodejsFunction(
+      this,
+      "translateLambda",
+      {
+        entry: translateLambdaPath,
+        handler: "translate",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        initialPolicy: [translateServicePolicy, translateTablePolicy],
+        environment: {
+          TRANSLATION_TABLE_NAME: table.tableName,
+          TRANSLATION_PARTITION_KEY: "requestId",
+        },
+      }
+    );
 
     restApi.root.addMethod(
       "POST",
-      new apigateway.LambdaIntegration(lambdaFunc)
+      new apigateway.LambdaIntegration(translateLambda)
+    );
+
+    // get translation lambda
+    const getTranslationsLambda = new lambdaNodeJs.NodejsFunction(
+      this,
+      "getTranslationsLambda",
+      {
+        entry: translateLambdaPath,
+        handler: "getTranslatons",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        initialPolicy: [translateTablePolicy],
+        environment: {
+          TRANSLATION_TABLE_NAME: table.tableName,
+          TRANSLATION_PARTITION_KEY: "requestId",
+        },
+      }
+    );
+
+    restApi.root.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(getTranslationsLambda)
     );
   }
 }

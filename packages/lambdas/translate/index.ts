@@ -25,7 +25,7 @@ if (!TRANSLATION_PARTITION_KEY) {
 const translateClient = new clientTranslate.TranslateClient({});
 const dynamodbClient = new dynamodb.DynamoDBClient({});
 
-export const index: lambda.APIGatewayProxyHandler = async function (
+export const translate: lambda.APIGatewayProxyHandler = async function (
   event: lambda.APIGatewayProxyEvent,
   context: lambda.Context
 ) {
@@ -65,7 +65,7 @@ export const index: lambda.APIGatewayProxyHandler = async function (
       throw new Error("translation is empty");
     }
 
-    const rtnDate: ITranslateResponse = {
+    const rtnData: ITranslateResponse = {
       timestamp: now,
       targetText: result.TranslatedText,
     };
@@ -75,7 +75,7 @@ export const index: lambda.APIGatewayProxyHandler = async function (
     const tableObj: ITranslateDbObject = {
       requestId: context.awsRequestId,
       ...body,
-      ...rtnDate,
+      ...rtnData,
     };
 
     const tableInsetCmd: dynamodb.PutItemCommandInput = {
@@ -93,7 +93,55 @@ export const index: lambda.APIGatewayProxyHandler = async function (
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Methods": "*",
       },
-      body: JSON.stringify(rtnDate),
+      body: JSON.stringify(rtnData),
+    };
+  } catch (e: any) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
+        "Access-Control-Allow-Headers": "*",
+      },
+      body: JSON.stringify(e.toString()),
+    };
+  }
+};
+
+export const getTranslatons: lambda.APIGatewayProxyHandler = async function (
+  event: lambda.APIGatewayProxyEvent,
+  context: lambda.Context
+) {
+  try {
+    const scanCmd: dynamodb.ScanCommandInput = {
+      TableName: TRANSLATION_TABLE_NAME,
+    };
+
+    console.log("scanCmd", scanCmd);
+
+    const { Items } = await dynamodbClient.send(
+      new dynamodb.ScanCommand(scanCmd)
+    );
+
+    if (!Items) {
+      throw new Error("no items found");
+    }
+
+    console.log("Items", Items);
+
+    const rtnData = Items.map((item) => unmarshall(item) as ITranslateDbObject);
+    console.log(rtnData);
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "*",
+      },
+      body: JSON.stringify(rtnData),
     };
   } catch (e: any) {
     console.error(e);
