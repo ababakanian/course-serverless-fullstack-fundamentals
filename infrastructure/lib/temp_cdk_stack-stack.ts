@@ -24,8 +24,19 @@ export class TempCdkStackStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const translatePolicyStatement = new iam.PolicyStatement({
+    // translate access policy
+    const translateServicePolicy = new iam.PolicyStatement({
       actions: ["translate:TranslateText"],
+      resources: ["*"],
+    });
+
+    const translateTablePolicy = new iam.PolicyStatement({
+      actions: [
+        "dynamodb:PutItem",
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:DeleteItem",
+      ],
       resources: ["*"],
     });
 
@@ -37,7 +48,7 @@ export class TempCdkStackStack extends cdk.Stack {
       entry: translateLambdaPath,
       handler: "index",
       runtime: lambda.Runtime.NODEJS_20_X,
-      initialPolicy: [translatePolicyStatement],
+      initialPolicy: [translateServicePolicy, translateTablePolicy],
       environment: {
         TRANSLATION_TABLE_NAME: table.tableName,
         TRANSLATION_PARTITION_KEY: "requestId",
@@ -47,7 +58,7 @@ export class TempCdkStackStack extends cdk.Stack {
     const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
 
     // granting read and write access to our dynamoDb table
-    table.grantReadWriteData(lambdaFunc);
+    // table.grantReadWriteData(lambdaFunc);
 
     restApi.root.addMethod(
       "POST",

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ITranslateRequest, ITranslateResponse } from "@sff/shared-types";
 
-const URL = "https://uq8tjcg2n9.execute-api.us-west-1.amazonaws.com/prod/";
+const URL = "https://a19wfj5e96.execute-api.us-west-1.amazonaws.com/prod";
 
 export const translateText = async ({
   inputLang,
