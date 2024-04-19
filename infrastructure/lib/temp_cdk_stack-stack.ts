@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodDb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 
 export class TempCdkStackStack extends cdk.Stack {
@@ -12,6 +13,16 @@ export class TempCdkStackStack extends cdk.Stack {
 
     const projectRoot = "../";
     const lambdasDirPath = path.join(projectRoot, "packages/lambdas");
+
+    // DynamoDb construct goes here
+    const table = new dynamodDb.Table(this, "translations", {
+      tableName: "translation",
+      partitionKey: {
+        name: "requestId",
+        type: dynamodDb.AttributeType.STRING,
+      },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     const translatePolicyStatement = new iam.PolicyStatement({
       actions: ["translate:TranslateText"],
@@ -30,6 +41,9 @@ export class TempCdkStackStack extends cdk.Stack {
     });
 
     const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
+
+    // granting read and write access to our dynamoDb table
+    table.grantReadWriteData(lambdaFunc);
 
     restApi.root.addMethod(
       "POST",
