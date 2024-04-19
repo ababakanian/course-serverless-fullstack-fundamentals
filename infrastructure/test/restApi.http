@@ -1,6 +1,6 @@
 
 // enter your API Gateway URL
-@URL=https://uq8tjcg2n9.execute-api.us-west-1.amazonaws.com/prod/
+@URL=https://a19wfj5e96.execute-api.us-west-1.amazonaws.com/prod/
 
 POST {{URL}} HTTP/1.1
 Content-Type: application/json

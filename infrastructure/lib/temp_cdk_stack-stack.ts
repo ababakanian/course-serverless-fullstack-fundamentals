@@ -38,6 +38,10 @@ export class TempCdkStackStack extends cdk.Stack {
       handler: "index",
       runtime: lambda.Runtime.NODEJS_20_X,
       initialPolicy: [translatePolicyStatement],
+      environment: {
+        TRANSLATION_TABLE_NAME: table.tableName,
+        TRANSLATION_PARTITION_KEY: "requestId",
+      },
     });
 
     const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
