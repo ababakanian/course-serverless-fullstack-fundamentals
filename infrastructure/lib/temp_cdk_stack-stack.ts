@@ -1,4 +1,5 @@
 import * as cdk from "aws-cdk-lib";
+import * as path from "path";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
@@ -9,13 +10,20 @@ export class TempCdkStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const projectRoot = "../";
+    const lambdasDirPath = path.join(projectRoot, "packages/lambdas");
+
     const translatePolicyStatement = new iam.PolicyStatement({
       actions: ["translate:TranslateText"],
       resources: ["*"],
     });
 
+    const translateLambdaPath = path.resolve(
+      path.join(lambdasDirPath, "translate/index.ts")
+    );
+
     const lambdaFunc = new lambdaNodeJs.NodejsFunction(this, "thisOfDay", {
-      entry: "./lambda/timeOfDay.ts",
+      entry: translateLambdaPath,
       handler: "index",
       runtime: lambda.Runtime.NODEJS_20_X,
       initialPolicy: [translatePolicyStatement],

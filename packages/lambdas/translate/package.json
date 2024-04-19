@@ -1,0 +1,10 @@
+{
+  "name": "@sff/translate",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "devDependencies": {
+    "@types/node": "20.11.19",
+    "ts-node": "^10.9.2",
+    "@sff/shared-types": "*"
+  }
+}

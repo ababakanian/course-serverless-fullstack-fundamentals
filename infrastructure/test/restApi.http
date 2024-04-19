@@ -9,5 +9,5 @@ Accept: "application/json"
 {
   "sourceLang": "en",
   "targetLang": "es",
-  "text": "walk"
+  "sourceText": "try someother word"
 }

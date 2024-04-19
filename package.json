@@ -7,6 +7,6 @@
   "workspaces": [
     "apps/*",
     "infrastructure",
-    "packages/*"
+    "packages/**"
   ]
 }
