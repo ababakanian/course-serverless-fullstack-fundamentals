@@ -11,8 +11,13 @@ export class TempCdkStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // project paths
     const projectRoot = "../";
     const lambdasDirPath = path.join(projectRoot, "packages/lambdas");
+    const lambdaLayersDirPath = path.join(
+      projectRoot,
+      "packages/lambda-layers"
+    );
 
     // DynamoDb construct goes here
     const table = new dynamodDb.Table(this, "translations", {
@@ -44,6 +49,16 @@ export class TempCdkStackStack extends cdk.Stack {
       path.join(lambdasDirPath, "translate/index.ts")
     );
 
+    const utilsLambdaLayerPath = path.resolve(
+      path.join(lambdaLayersDirPath, "utils-lambda-layer")
+    );
+
+    const utilsLambdaLayer = new lambda.LayerVersion(this, "utilsLambdaLayer", {
+      code: lambda.Code.fromAsset(utilsLambdaLayerPath),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // top level api gateway construct
     const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
 
@@ -56,6 +71,7 @@ export class TempCdkStackStack extends cdk.Stack {
         handler: "translate",
         runtime: lambda.Runtime.NODEJS_20_X,
         initialPolicy: [translateServicePolicy, translateTablePolicy],
+        layers: [utilsLambdaLayer],
         environment: {
           TRANSLATION_TABLE_NAME: table.tableName,
           TRANSLATION_PARTITION_KEY: "requestId",
@@ -77,6 +93,7 @@ export class TempCdkStackStack extends cdk.Stack {
         handler: "getTranslatons",
         runtime: lambda.Runtime.NODEJS_20_X,
         initialPolicy: [translateTablePolicy],
+        layers: [utilsLambdaLayer],
         environment: {
           TRANSLATION_TABLE_NAME: table.tableName,
           TRANSLATION_PARTITION_KEY: "requestId",
