@@ -2,6 +2,8 @@ import * as clientTranslate from "@aws-sdk/client-translate";
 import * as dynamodb from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import * as lambda from "aws-lambda";
+import { gateway } from "/opt/nodejs/utils-lambda-layer";
+
 import {
   ITranslateDbObject,
   ITranslateRequest,
@@ -84,28 +86,10 @@ export const translate: lambda.APIGatewayProxyHandler = async function (
     };
 
     await dynamodbClient.send(new dynamodb.PutItemCommand(tableInsetCmd));
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
-        "Access-Control-Allow-Headers": "*",
-        "Access-Control-Allow-Methods": "*",
-      },
-      body: JSON.stringify(rtnData),
-    };
+    return gateway.createSuccessJsonResponse(rtnData);
   } catch (e: any) {
     console.error(e);
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
-        "Access-Control-Allow-Headers": "*",
-      },
-      body: JSON.stringify(e.toString()),
-    };
+    return gateway.createErrorJsonResponse(e);
   }
 };
 
@@ -133,26 +117,9 @@ export const getTranslatons: lambda.APIGatewayProxyHandler = async function (
     const rtnData = Items.map((item) => unmarshall(item) as ITranslateDbObject);
     console.log(rtnData);
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
-        "Access-Control-Allow-Headers": "*",
-        "Access-Control-Allow-Methods": "*",
-      },
-      body: JSON.stringify(rtnData),
-    };
+    return gateway.createSuccessJsonResponse(rtnData);
   } catch (e: any) {
     console.error(e);
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-        "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
-        "Access-Control-Allow-Headers": "*",
-      },
-      body: JSON.stringify(e.toString()),
-    };
+    return gateway.createErrorJsonResponse(e);
   }
 };
