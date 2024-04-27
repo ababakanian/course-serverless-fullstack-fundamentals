@@ -8,7 +8,7 @@ import {
 
 const URL = "https://a19wfj5e96.execute-api.us-west-1.amazonaws.com/prod";
 
-export const translateText = async ({
+const translateText = async ({
   inputLang,
   inputText,
   outputLang,
@@ -37,7 +37,7 @@ export const translateText = async ({
   }
 };
 
-export const getTranslations = async () => {
+const getTranslations = async () => {
   try {
     const result = await fetch(URL, {
       method: "GET",
@@ -131,7 +131,7 @@ export default function Home() {
         <p>Result:</p>
         <pre>
           {translations.map((item) => (
-            <div>
+            <div key={item.requestId}>
               <p>
                 {item.sourceLang}/{item.sourceText}
               </p>

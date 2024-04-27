@@ -6,6 +6,9 @@ import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodDb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 export class TempCdkStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -105,5 +108,46 @@ export class TempCdkStackStack extends cdk.Stack {
       "GET",
       new apigateway.LambdaIntegration(getTranslationsLambda)
     );
+
+    // create the bucket and deploy
+    const bucket = new s3.Bucket(this, `WebsiteBucket`, {
+      websiteIndexDocument: "index.html",
+      websiteErrorDocument: "404.html",
+      publicReadAccess: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // create cloudfront
+    const distro = new cloudfront.CloudFrontWebDistribution(
+      this,
+      `WebsiteCloudfrontDist`,
+      {
+        originConfigs: [
+          {
+            s3OriginSource: {
+              s3BucketSource: bucket,
+            },
+            behaviors: [
+              {
+                isDefaultBehavior: true,
+              },
+            ],
+          },
+        ],
+      }
+    );
+
+    new s3deploy.BucketDeployment(this, `bucketDeployment`, {
+      sources: [s3deploy.Source.asset("../apps/frontend/dist")],
+      destinationBucket: bucket,
+      distribution: distro,
+      distributionPaths: ["/*"],
+    });
+
+    new cdk.CfnOutput(this, "webUrl", {
+      exportName: "webUrl",
+      value: `http://${distro.distributionDomainName}`,
+    });
   }
 }
