@@ -9,6 +9,9 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export class TempCdkStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -21,6 +24,8 @@ export class TempCdkStackStack extends cdk.Stack {
       projectRoot,
       "packages/lambda-layers"
     );
+    const domain = "redrobotexample.com";
+    const fullUrl = `www.${domain}`;
 
     // DynamoDb construct goes here
     const table = new dynamodDb.Table(this, "translations", {
@@ -109,6 +114,26 @@ export class TempCdkStackStack extends cdk.Stack {
       new apigateway.LambdaIntegration(getTranslationsLambda)
     );
 
+    // fetch route53 zone
+    const zone = route53.HostedZone.fromLookup(this, "zone", {
+      domainName: domain,
+    });
+
+    // this will create a certificate
+    const certificate = new acm.Certificate(this, "certificate", {
+      domainName: domain,
+      subjectAlternativeNames: [fullUrl],
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
+
+    // viewer certificate
+    const viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
+      certificate,
+      {
+        aliases: [domain, fullUrl],
+      }
+    );
+
     // bucket where website dist will reside
     const bucket = new s3.Bucket(this, "WebsiteBucket", {
       websiteIndexDocument: "index.html",
@@ -128,6 +153,7 @@ export class TempCdkStackStack extends cdk.Stack {
       this,
       "WebsiteCloudfrontDist",
       {
+        viewerCertificate,
         originConfigs: [
           {
             s3OriginSource: {
@@ -149,6 +175,22 @@ export class TempCdkStackStack extends cdk.Stack {
       sources: [s3deploy.Source.asset("../apps/frontend/dist")],
       distribution: distro,
       distributionPaths: ["/*"],
+    });
+
+    new route53.ARecord(this, "route53Domain", {
+      zone,
+      recordName: domain,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.CloudFrontTarget(distro)
+      ),
+    });
+
+    new route53.ARecord(this, "route53FullUrl", {
+      zone,
+      recordName: fullUrl,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.CloudFrontTarget(distro)
+      ),
     });
 
     new cdk.CfnOutput(this, "webUrl", {
