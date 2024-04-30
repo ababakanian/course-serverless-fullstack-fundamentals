@@ -6,6 +6,8 @@ import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodDb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 export class TempCdkStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -105,5 +107,26 @@ export class TempCdkStackStack extends cdk.Stack {
       "GET",
       new apigateway.LambdaIntegration(getTranslationsLambda)
     );
+
+    // bucket where website dist will reside
+    const bucket = new s3.Bucket(this, "WebsiteBucket", {
+      websiteIndexDocument: "index.html",
+      websiteErrorDocument: "404.html",
+      publicReadAccess: true,
+      blockPublicAccess: {
+        blockPublicAcls: false,
+        blockPublicPolicy: false,
+        ignorePublicAcls: false,
+        restrictPublicBuckets: false,
+      },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // s3 construct to deploy the website dist content
+    new s3deploy.BucketDeployment(this, "WebsiteDeploy", {
+      destinationBucket: bucket,
+      sources: [s3deploy.Source.asset("../apps/frontend/dist")],
+    });
   }
 }
