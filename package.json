@@ -1,7 +1,8 @@
 {
   "name": "course-serverless-fullstack-fundamentals",
   "scripts": {
-    "frontend-dev": "npm run dev --workspace=@sff/frontend",
+    "frontend:dev": "npm run dev --workspace=@sff/frontend",
+    "frontend:build": "npm run build --workspace=@sff/frontend",
     "deploy": "cd infrastructure; cdk deploy -f --require-approval never",
     "build-utils-lambda-layer": "npm run build --workspace=@sff/utils-lambda-layer",
     "watch-utils-lambda-layer": "npm run watch --workspace=@sff/utils-lambda-layer"
