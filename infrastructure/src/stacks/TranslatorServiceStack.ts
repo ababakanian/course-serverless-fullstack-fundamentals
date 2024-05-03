@@ -7,10 +7,13 @@ import {
   StaticWebsiteDeployment,
   CertificateWrapper,
 } from "../constructs";
+import { getConfig } from "../helpers";
 
 export class TranslatorServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    const config = getConfig();
+    console.log(config);
 
     // project paths
     const projectRoot = "../";
@@ -19,9 +22,11 @@ export class TranslatorServiceStack extends cdk.Stack {
       projectRoot,
       "packages/lambda-layers"
     );
-    const domain = "redrobotexample.com";
-    const webUrl = `www.${domain}`;
-    const apiUrl = `api.${domain}`;
+    const domain = config.domain;
+    const webUrl = `${config.webSubdomain}.${domain}`;
+    const apiUrl = `${config.apiSubdomain}.${domain}`;
+
+    console.log(lambdasDirPath);
 
     const cw = new CertificateWrapper(this, "certificateWrapper", {
       domain,
