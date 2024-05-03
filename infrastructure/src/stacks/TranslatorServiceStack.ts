@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-import * as path from "path";
 import { Construct } from "constructs";
 import {
   RestApiService,
@@ -13,20 +12,10 @@ export class TranslatorServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     const config = getConfig();
-    console.log(config);
 
-    // project paths
-    const projectRoot = "../";
-    const lambdasDirPath = path.join(projectRoot, "packages/lambdas");
-    const lambdaLayersDirPath = path.join(
-      projectRoot,
-      "packages/lambda-layers"
-    );
     const domain = config.domain;
     const webUrl = `${config.webSubdomain}.${domain}`;
     const apiUrl = `${config.apiSubdomain}.${domain}`;
-
-    console.log(lambdasDirPath);
 
     const cw = new CertificateWrapper(this, "certificateWrapper", {
       domain,
@@ -41,8 +30,6 @@ export class TranslatorServiceStack extends cdk.Stack {
     });
 
     new TranslationService(this, "translationService", {
-      lambdaLayersDirPath,
-      lambdasDirPath,
       restApi,
     });
 

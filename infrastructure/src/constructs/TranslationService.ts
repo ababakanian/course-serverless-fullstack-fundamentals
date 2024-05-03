@@ -7,10 +7,9 @@ import * as dynamodDb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import { RestApiService } from "./RestApiService";
+import { lambdaLayersDirPath, lambdasDirPath } from "../helpers";
 
 export interface ITranslationServiceProps extends cdk.StackProps {
-  lambdasDirPath: string;
-  lambdaLayersDirPath: string;
   restApi: RestApiService;
 }
 
@@ -19,7 +18,7 @@ export class TranslationService extends Construct {
   constructor(
     scope: Construct,
     id: string,
-    { lambdasDirPath, lambdaLayersDirPath, restApi }: ITranslationServiceProps
+    { restApi }: ITranslationServiceProps
   ) {
     super(scope, id);
 
