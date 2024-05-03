@@ -3,10 +3,10 @@
   "scripts": {
     "frontend:dev": "npm run dev --workspace=@sff/frontend",
     "frontend:build": "npm run build --workspace=@sff/frontend",
-    "deploy": "cd infrastructure; cdk deploy -f --require-approval never",
-    "destroy": "cd infrastructure; cdk destroy -f --require-approval never",
-    "build-utils-lambda-layer": "npm run build --workspace=@sff/utils-lambda-layer",
-    "watch-utils-lambda-layer": "npm run watch --workspace=@sff/utils-lambda-layer"
+    "cdk:deploy": "cd infrastructure; cdk deploy -f --require-approval never",
+    "cdk:destroy": "cd infrastructure; cdk destroy -f --require-approval never",
+    "lambda-layer:build-utils": "npm run build --workspace=@sff/utils-lambda-layer",
+    "lambda-layer:watch-utils": "npm run watch --workspace=@sff/utils-lambda-layer"
   },
   "workspaces": [
     "apps/*",
