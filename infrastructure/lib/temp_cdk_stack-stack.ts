@@ -26,6 +26,19 @@ export class TempCdkStackStack extends cdk.Stack {
     );
     const domain = "redrobotexample.com";
     const fullUrl = `www.${domain}`;
+    const apiUrl = `api.${domain}`;
+
+    // fetch route53 zone
+    const zone = route53.HostedZone.fromLookup(this, "zone", {
+      domainName: domain,
+    });
+
+    // this will create a certificate
+    const certificate = new acm.Certificate(this, "certificate", {
+      domainName: domain,
+      subjectAlternativeNames: [fullUrl, apiUrl],
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
 
     // DynamoDb construct goes here
     const table = new dynamodDb.Table(this, "translations", {
@@ -68,7 +81,12 @@ export class TempCdkStackStack extends cdk.Stack {
     });
 
     // top level api gateway construct
-    const restApi = new apigateway.RestApi(this, "timeOfDayRestApi");
+    const restApi = new apigateway.RestApi(this, "timeOfDayRestApi", {
+      domainName: {
+        domainName: apiUrl,
+        certificate,
+      },
+    });
 
     // the translation lambda
     const translateLambda = new lambdaNodeJs.NodejsFunction(
@@ -113,18 +131,6 @@ export class TempCdkStackStack extends cdk.Stack {
       "GET",
       new apigateway.LambdaIntegration(getTranslationsLambda)
     );
-
-    // fetch route53 zone
-    const zone = route53.HostedZone.fromLookup(this, "zone", {
-      domainName: domain,
-    });
-
-    // this will create a certificate
-    const certificate = new acm.Certificate(this, "certificate", {
-      domainName: domain,
-      subjectAlternativeNames: [fullUrl],
-      validation: acm.CertificateValidation.fromDns(zone),
-    });
 
     // viewer certificate
     const viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
@@ -187,9 +193,17 @@ export class TempCdkStackStack extends cdk.Stack {
 
     new route53.ARecord(this, "route53FullUrl", {
       zone,
-      recordName: fullUrl,
+      recordName: "www",
       target: route53.RecordTarget.fromAlias(
         new route53Targets.CloudFrontTarget(distro)
+      ),
+    });
+
+    new route53.ARecord(this, "apiDns", {
+      zone,
+      recordName: "api",
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.ApiGateway(restApi)
       ),
     });
 
