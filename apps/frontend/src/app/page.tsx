@@ -77,10 +77,30 @@ const translateUsersText = async ({
 const getUsersTranslations = async () => {
   try {
     const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
-    console.log("authToken:", authToken);
-
     const result = await fetch(`${URL}/user`, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    const rtnValue = (await result.json()) as Array<ITranslateDbObject>;
+    return rtnValue;
+  } catch (e: any) {
+    console.error(e);
+    throw e;
+  }
+};
+
+const deleteUserTranslation = async (item: {
+  username: string;
+  requestId: string;
+}) => {
+  try {
+    const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
+    const result = await fetch(`${URL}/user`, {
+      method: "DELETE",
+      body: JSON.stringify(item),
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -185,24 +205,33 @@ export default function Home() {
       >
         getTranslations
       </button>
-      <div>
-        <p>Result:</p>
-        <pre>
-          {translations.map((item) => (
-            <div key={item.requestId}>
-              <p>
-                {item.sourceLang}/{item.sourceText}
-              </p>
-              <p>
-                {item.targetLang}/{item.targetText}
-              </p>
-            </div>
-          ))}
-        </pre>
-
-        {/* <pre style={{ whiteSpace: "pre-wrap" }} className="w-full">
-          {JSON.stringify(translations, null, 2)}
-        </pre> */}
+      <div className="flex flex-col space-y-1">
+        {translations.map((item) => (
+          <div
+            className="flex flex-row justify-between p-1 space-x-1 bg-slate-400"
+            key={item.requestId}
+          >
+            <p>
+              {item.sourceLang}/{item.sourceText}
+            </p>
+            <p>
+              {item.targetLang}/{item.targetText}
+            </p>
+            <button
+              className="btn p-1 bg-red-500 hover:bg-red-300 rounded-md"
+              type="button"
+              onClick={async () => {
+                const rtnValue = await deleteUserTranslation({
+                  requestId: item.requestId,
+                  username: item.username,
+                });
+                setTranslations(rtnValue);
+              }}
+            >
+              X
+            </button>
+          </div>
+        ))}
       </div>
     </main>
   );
