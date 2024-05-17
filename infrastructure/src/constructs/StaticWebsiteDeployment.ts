@@ -74,6 +74,7 @@ export class StaticWebsiteDeployment extends Construct {
       sources: [s3deploy.Source.asset(frontendDistPath)],
       distribution: distro,
       distributionPaths: ["/*"],
+      memoryLimit: 512,
     });
 
     new route53.ARecord(this, "route53Domain", {

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ConfigureAmplify } from "@/components";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ConfigureAmplify />
+        <div className="flex gap-2 px-4 py-2 bg-orange-400">
+          <Link href="/">Home</Link>
+          <Link href="/user">User</Link>
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
