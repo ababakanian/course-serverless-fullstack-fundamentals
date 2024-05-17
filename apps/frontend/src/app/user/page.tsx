@@ -6,22 +6,27 @@ import { getCurrentUser, signIn, signOut } from "aws-amplify/auth";
 function Login({ onSignedIn }: { onSignedIn: () => void }) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <form
       className="flex flex-col space-y-4"
       onSubmit={async (event) => {
         event.preventDefault();
-        await signIn({
-          username: email,
-          password,
-          options: {
-            userAttributes: {
-              email,
+        try {
+          await signIn({
+            username: email,
+            password,
+            options: {
+              userAttributes: {
+                email,
+              },
             },
-          },
-        });
-        onSignedIn();
+          });
+          onSignedIn();
+        } catch (e: any) {
+          setError(e.toString());
+        }
       }}
     >
       <div>
@@ -51,6 +56,7 @@ function Login({ onSignedIn }: { onSignedIn: () => void }) {
       <Link className="hover:underline" href="/register">
         Register
       </Link>
+      {error && <p className="text-red-600 font-bold">{error}</p>}
     </form>
   );
 }
