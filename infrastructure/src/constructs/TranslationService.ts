@@ -34,6 +34,10 @@ export class TranslationService extends Construct {
     const table = new dynamodDb.Table(this, "translations", {
       tableName: "translation",
       partitionKey: {
+        name: "username",
+        type: dynamodDb.AttributeType.STRING,
+      },
+      sortKey: {
         name: "requestId",
         type: dynamodDb.AttributeType.STRING,
       },
@@ -53,6 +57,7 @@ export class TranslationService extends Construct {
         "dynamodb:Scan",
         "dynamodb:GetItem",
         "dynamodb:DeleteItem",
+        "dynamodb:Query",
       ],
       resources: ["*"],
     });
@@ -64,17 +69,20 @@ export class TranslationService extends Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const environment = {
+      TRANSLATION_TABLE_NAME: table.tableName,
+      TRANSLATION_PARTITION_KEY: "username",
+      TRANSLATION_SORT_KEY: "requestId",
+    };
+
     // the translation lambda
 
     const translateLambda = createNodeJsLambda(this, "translateLambda", {
       lambdaRelPath: "translate/index.ts",
-      handler: "translate",
+      handler: "userTranslate",
       initialPolicy: [translateServicePolicy, translateTablePolicy],
       lambdaLayers: [utilsLambdaLayer],
-      environment: {
-        TRANSLATION_TABLE_NAME: table.tableName,
-        TRANSLATION_PARTITION_KEY: "requestId",
-      },
+      environment,
     });
 
     // adding lambda to restApi
@@ -90,13 +98,10 @@ export class TranslationService extends Construct {
       "getTranslationsLambda",
       {
         lambdaRelPath: "translate/index.ts",
-        handler: "getTranslatons",
+        handler: "getUserTranslations",
         initialPolicy: [translateTablePolicy],
         lambdaLayers: [utilsLambdaLayer],
-        environment: {
-          TRANSLATION_TABLE_NAME: table.tableName,
-          TRANSLATION_PARTITION_KEY: "requestId",
-        },
+        environment,
       }
     );
 
