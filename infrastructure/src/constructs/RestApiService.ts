@@ -17,6 +17,8 @@ export interface IRestApiServiceProps extends cdk.StackProps {
 export class RestApiService extends Construct {
   public restApi: apigateway.RestApi;
   public authorizer?: apigateway.CognitoUserPoolsAuthorizer;
+  public publicResource: apigateway.Resource;
+  public userResource: apigateway.Resource;
 
   constructor(
     scope: Construct,
@@ -38,6 +40,9 @@ export class RestApiService extends Construct {
         allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
       },
     });
+
+    this.publicResource = this.restApi.root.addResource("public");
+    this.userResource = this.restApi.root.addResource("user");
 
     // create authorizer if userPool is passed in
     if (userPool) {
@@ -61,10 +66,12 @@ export class RestApiService extends Construct {
   }
 
   addTranslateMethod({
+    resource,
     httpMethod,
     lambda,
     isAuth,
   }: {
+    resource: apigateway.Resource;
     httpMethod: string;
     lambda: lambda.IFunction;
     isAuth?: boolean;
@@ -81,7 +88,7 @@ export class RestApiService extends Construct {
       };
     }
 
-    this.restApi.root.addMethod(
+    resource.addMethod(
       httpMethod,
       new apigateway.LambdaIntegration(lambda),
       options

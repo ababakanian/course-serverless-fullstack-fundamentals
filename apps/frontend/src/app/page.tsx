@@ -5,12 +5,41 @@ import {
   ITranslateRequest,
   ITranslateResponse,
 } from "@sff/shared-types";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 
 // const URL = "https://1swn254sp8.execute-api.us-east-1.amazonaws.com/prod/";
-const URL = "https://api.redrobotexample.com/";
+const URL = "https://api.redrobotexample.com";
 
-const translateText = async ({
+const translatePublicText = async ({
+  inputLang,
+  inputText,
+  outputLang,
+}: {
+  inputLang: string;
+  inputText: string;
+  outputLang: string;
+}) => {
+  try {
+    const request: ITranslateRequest = {
+      sourceLang: inputLang,
+      targetLang: outputLang,
+      sourceText: inputText,
+    };
+
+    const result = await fetch(`${URL}/public`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    const rtnValue = (await result.json()) as ITranslateResponse;
+    return rtnValue;
+  } catch (e: any) {
+    console.error(e);
+    throw e;
+  }
+};
+
+const translateUsersText = async ({
   inputLang,
   inputText,
   outputLang,
@@ -29,7 +58,7 @@ const translateText = async ({
     const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
     console.log("authToken:", authToken);
 
-    const result = await fetch(`${URL}`, {
+    const result = await fetch(`${URL}/user`, {
       method: "POST",
       body: JSON.stringify(request),
       headers: {
@@ -45,12 +74,12 @@ const translateText = async ({
   }
 };
 
-const getTranslations = async () => {
+const getUsersTranslations = async () => {
   try {
     const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
     console.log("authToken:", authToken);
 
-    const result = await fetch(URL, {
+    const result = await fetch(`${URL}/user`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -80,11 +109,26 @@ export default function Home() {
         className="flex flex-col space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
-          const result = await translateText({
-            inputLang,
-            outputLang,
-            inputText,
-          });
+          let result = null;
+
+          try {
+            const user = await getCurrentUser();
+            if (user) {
+              result = await translateUsersText({
+                inputLang,
+                outputLang,
+                inputText,
+              });
+            } else {
+              throw new Error("user not logged in");
+            }
+          } catch (e) {
+            result = await translatePublicText({
+              inputLang,
+              outputLang,
+              inputText,
+            });
+          }
           console.log(result);
           setOutputText(result);
         }}
@@ -135,7 +179,7 @@ export default function Home() {
         className="btn bg-blue-500"
         type="button"
         onClick={async () => {
-          const rtnValue = await getTranslations();
+          const rtnValue = await getUsersTranslations();
           setTranslations(rtnValue);
         }}
       >

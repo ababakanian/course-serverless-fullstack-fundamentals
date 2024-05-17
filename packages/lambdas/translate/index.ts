@@ -49,6 +49,49 @@ const getUsername = (event: lambda.APIGatewayProxyEvent) => {
   return username;
 };
 
+export const publicTranslate: lambda.APIGatewayProxyHandler = async function (
+  event: lambda.APIGatewayProxyEvent,
+  context: lambda.Context
+) {
+  try {
+    if (!event.body) {
+      throw new exception.MissingBodyData();
+    }
+
+    let body = JSON.parse(event.body) as ITranslateRequest;
+
+    if (!body.sourceLang) {
+      throw new exception.MissingParameters("sourceLang");
+    }
+    if (!body.targetLang) {
+      throw new exception.MissingParameters("targetLang");
+    }
+    if (!body.sourceText) {
+      throw new exception.MissingParameters("sourceText");
+    }
+
+    const now = new Date(Date.now()).toString();
+    console.log(now);
+
+    const result = await getTranslation(body);
+    console.log(result);
+
+    if (!result.TranslatedText) {
+      throw new exception.MissingParameters("TranslationText");
+    }
+
+    const rtnData: ITranslateResponse = {
+      timestamp: now,
+      targetText: result.TranslatedText,
+    };
+
+    return gateway.createSuccessJsonResponse(rtnData);
+  } catch (e: any) {
+    console.error(e);
+    return gateway.createErrorJsonResponse(e);
+  }
+};
+
 export const userTranslate: lambda.APIGatewayProxyHandler = async function (
   event: lambda.APIGatewayProxyEvent,
   context: lambda.Context
