@@ -5,6 +5,7 @@ import {
   ITranslateRequest,
   ITranslateResponse,
 } from "@sff/shared-types";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 // const URL = "https://1swn254sp8.execute-api.us-east-1.amazonaws.com/prod/";
 const URL = "https://api.redrobotexample.com/";
@@ -25,9 +26,15 @@ const translateText = async ({
       sourceText: inputText,
     };
 
+    const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
+    console.log("authToken:", authToken);
+
     const result = await fetch(`${URL}`, {
       method: "POST",
       body: JSON.stringify(request),
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
     });
 
     const rtnValue = (await result.json()) as ITranslateResponse;
@@ -40,8 +47,14 @@ const translateText = async ({
 
 const getTranslations = async () => {
   try {
+    const authToken = (await fetchAuthSession()).tokens?.idToken?.toString();
+    console.log("authToken:", authToken);
+
     const result = await fetch(URL, {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
     });
 
     const rtnValue = (await result.json()) as Array<ITranslateDbObject>;

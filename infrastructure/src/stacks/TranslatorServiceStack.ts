@@ -31,6 +31,7 @@ export class TranslatorServiceStack extends cdk.Stack {
       apiUrl,
       certificate: cw.certificate,
       zone: cw.zone,
+      userPool: userAuth.userPool,
     });
 
     new TranslationService(this, "translationService", {

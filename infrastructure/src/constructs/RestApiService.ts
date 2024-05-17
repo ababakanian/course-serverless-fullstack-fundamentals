@@ -5,19 +5,23 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 export interface IRestApiServiceProps extends cdk.StackProps {
   apiUrl: string;
   certificate: acm.Certificate;
   zone: route53.IHostedZone;
+  userPool?: cognito.UserPool;
 }
 
 export class RestApiService extends Construct {
   public restApi: apigateway.RestApi;
+  public authorizer?: apigateway.CognitoUserPoolsAuthorizer;
+
   constructor(
     scope: Construct,
     id: string,
-    { apiUrl, certificate, zone }: IRestApiServiceProps
+    { apiUrl, certificate, zone, userPool }: IRestApiServiceProps
   ) {
     super(scope, id);
 
@@ -27,7 +31,25 @@ export class RestApiService extends Construct {
         domainName: apiUrl,
         certificate,
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowCredentials: true,
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+      },
     });
+
+    // create authorizer if userPool is passed in
+    if (userPool) {
+      this.authorizer = new apigateway.CognitoUserPoolsAuthorizer(
+        this.restApi,
+        "authorizer",
+        {
+          cognitoUserPools: [userPool],
+          authorizerName: "userPoolAuthorizer",
+        }
+      );
+    }
 
     new route53.ARecord(this, "apiDns", {
       zone,
@@ -41,13 +63,28 @@ export class RestApiService extends Construct {
   addTranslateMethod({
     httpMethod,
     lambda,
+    isAuth,
   }: {
     httpMethod: string;
     lambda: lambda.IFunction;
+    isAuth?: boolean;
   }) {
+    let options: apigateway.MethodOptions = {};
+    if (isAuth) {
+      if (!this.authorizer) {
+        throw new Error("authorizer is not set");
+      }
+
+      options = {
+        authorizer: this.authorizer,
+        authorizationType: apigateway.AuthorizationType.COGNITO,
+      };
+    }
+
     this.restApi.root.addMethod(
       httpMethod,
-      new apigateway.LambdaIntegration(lambda)
+      new apigateway.LambdaIntegration(lambda),
+      options
     );
   }
 }
