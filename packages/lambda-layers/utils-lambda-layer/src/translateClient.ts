@@ -1,5 +1,6 @@
 import * as clientTranslate from "@aws-sdk/client-translate";
 import { ITranslateRequest } from "@sff/shared-types";
+import { MissingParameters } from "./appExceptions";
 
 export async function getTranslation({
   sourceLang,
@@ -15,5 +16,10 @@ export async function getTranslation({
   });
 
   const result = await translateClient.send(translateCommand);
-  return result;
+
+  if (!result.TranslatedText) {
+    throw new MissingParameters("TranslationText");
+  }
+
+  return result.TranslatedText;
 }

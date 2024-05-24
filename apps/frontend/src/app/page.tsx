@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import {
-  ITranslateDbObject,
+  ITranslateResult,
   ITranslateRequest,
   ITranslateResponse,
 } from "@sff/shared-types";
@@ -84,7 +84,7 @@ const getUsersTranslations = async () => {
       },
     });
 
-    const rtnValue = (await result.json()) as Array<ITranslateDbObject>;
+    const rtnValue = (await result.json()) as Array<ITranslateResult>;
     return rtnValue;
   } catch (e: any) {
     console.error(e);
@@ -106,7 +106,7 @@ const deleteUserTranslation = async (item: {
       },
     });
 
-    const rtnValue = (await result.json()) as Array<ITranslateDbObject>;
+    const rtnValue = (await result.json()) as Array<ITranslateResult>;
     return rtnValue;
   } catch (e: any) {
     console.error(e);
@@ -119,9 +119,7 @@ export default function Home() {
   const [outputLang, setOutputLang] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
   const [outputText, setOutputText] = useState<ITranslateResponse | null>(null);
-  const [translations, setTranslations] = useState<Array<ITranslateDbObject>>(
-    []
-  );
+  const [translations, setTranslations] = useState<Array<ITranslateResult>>([]);
 
   return (
     <main className="flex flex-col m-8">

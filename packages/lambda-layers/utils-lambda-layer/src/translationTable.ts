@@ -1,6 +1,6 @@
 import * as dynamodb from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { ITranslateDbObject } from "@sff/shared-types";
+import { ITranslatePrimaryKey, ITranslateResult } from "@sff/shared-types";
 
 export class TranslationTable {
   tableName: string;
@@ -23,7 +23,7 @@ export class TranslationTable {
     this.dynamodbClient = new dynamodb.DynamoDBClient({});
   }
 
-  async insert(data: ITranslateDbObject) {
+  async insert(data: ITranslateResult) {
     const tableInsetCmd: dynamodb.PutItemCommandInput = {
       TableName: this.tableName,
       Item: marshall(data),
@@ -32,7 +32,7 @@ export class TranslationTable {
     await this.dynamodbClient.send(new dynamodb.PutItemCommand(tableInsetCmd));
   }
 
-  async query({ username }: { username: string }) {
+  async query({ username }: ITranslatePrimaryKey) {
     const queryCmd: dynamodb.QueryCommandInput = {
       TableName: this.tableName,
       KeyConditionExpression: "#PARTITION_KEY = :username",
@@ -53,27 +53,21 @@ export class TranslationTable {
       return [];
     }
 
-    const rtnData = Items.map((item) => unmarshall(item) as ITranslateDbObject);
+    const rtnData = Items.map((item) => unmarshall(item) as ITranslateResult);
     return rtnData;
   }
 
-  async delete({
-    username,
-    requestId,
-  }: {
-    username: string;
-    requestId: string;
-  }) {
+  async delete(item: ITranslatePrimaryKey) {
     const deleteCmd: dynamodb.DeleteItemCommandInput = {
       TableName: this.tableName,
       Key: {
-        [this.partitionKey]: { S: username },
-        [this.sortKey]: { S: requestId },
+        [this.partitionKey]: { S: item.username },
+        [this.sortKey]: { S: item.requestId },
       },
     };
 
     await this.dynamodbClient.send(new dynamodb.DeleteItemCommand(deleteCmd));
-    return this.query({ username });
+    return item;
   }
 
   async getAll() {
@@ -89,7 +83,7 @@ export class TranslationTable {
       return [];
     }
 
-    const rtnData = Items.map((item) => unmarshall(item) as ITranslateDbObject);
+    const rtnData = Items.map((item) => unmarshall(item) as ITranslateResult);
     return rtnData;
   }
 }
