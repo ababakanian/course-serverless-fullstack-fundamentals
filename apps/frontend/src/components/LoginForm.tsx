@@ -1,7 +1,7 @@
-import { ILoginFormData } from "@/lib";
-import { signIn, signUp } from "aws-amplify/auth";
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useUser } from "@/hooks/useUser";
+import { ILoginFormData } from "@/lib";
 
 export const LoginForm = ({ onSignedIn }: { onSignedIn: () => void }) => {
   const {
@@ -10,26 +10,13 @@ export const LoginForm = ({ onSignedIn }: { onSignedIn: () => void }) => {
     formState: { errors },
   } = useForm<ILoginFormData>();
 
-  const onSubmit: SubmitHandler<ILoginFormData> = async (
-    { email, password },
-    event
-  ) => {
-    event && event.preventDefault();
+  const { login } = useUser();
 
-    try {
-      await signIn({
-        username: email,
-        password,
-        options: {
-          userAttributes: {
-            email,
-          },
-        },
-      });
+  const onSubmit: SubmitHandler<ILoginFormData> = async (data, event) => {
+    event && event.preventDefault();
+    login(data).then(() => {
       onSignedIn();
-    } catch (e) {
-      console.error(e);
-    }
+    });
   };
 
   return (

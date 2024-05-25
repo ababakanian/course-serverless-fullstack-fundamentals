@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ConfigureAmplify, Provider } from "@/components";
+import { ConfigureAmplify, Provider, useApp } from "@/components";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,7 @@ export default function RootLayout({
             <Link href="/user">User</Link>
           </div>
           {children}
+          <Toaster />
         </Provider>
       </body>
     </html>

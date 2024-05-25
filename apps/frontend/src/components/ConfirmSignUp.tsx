@@ -1,7 +1,5 @@
-import { useTranslate } from "@/hooks";
+import { useUser } from "@/hooks";
 import { IRegisterConfirmation, ISignUpState } from "@/lib";
-import { ITranslateRequest } from "@sff/shared-types";
-import { confirmSignUp, signUp } from "aws-amplify/auth";
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -16,22 +14,19 @@ export const ConfirmSignUp = ({
     formState: { errors },
   } = useForm<IRegisterConfirmation>();
 
+  const { confirmRegister } = useUser();
+
   const onSubmit: SubmitHandler<IRegisterConfirmation> = async (
-    { email, verificationCode },
+    data,
     event
   ) => {
     event && event.preventDefault();
-
-    try {
-      console.log("on confirm called");
-      const { nextStep } = await confirmSignUp({
-        confirmationCode: verificationCode,
-        username: email,
-      });
-
-      console.log(nextStep.signUpStep);
-      onStepChange(nextStep);
-    } catch (e) {}
+    confirmRegister(data).then((nextStep) => {
+      if (nextStep) {
+        console.log(nextStep.signUpStep);
+        onStepChange(nextStep);
+      }
+    });
   };
 
   return (

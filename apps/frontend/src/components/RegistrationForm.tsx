@@ -1,7 +1,5 @@
-import { useTranslate } from "@/hooks";
+import { useUser } from "@/hooks";
 import { IRegisterFormData, ISignUpState } from "@/lib";
-import { ITranslateRequest } from "@sff/shared-types";
-import { signUp } from "aws-amplify/auth";
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -16,33 +14,17 @@ export const RegistrationForm = ({
     formState: { errors },
   } = useForm<IRegisterFormData>();
 
-  const onSubmit: SubmitHandler<IRegisterFormData> = async (
-    { email, password, password2 },
-    event
-  ) => {
+  const { register: accountRegister } = useUser();
+
+  const onSubmit: SubmitHandler<IRegisterFormData> = async (data, event) => {
     event && event.preventDefault();
 
-    try {
-      if (password !== password2) {
-        throw new Error("password don't match");
+    accountRegister(data).then((nextStep) => {
+      if (nextStep) {
+        console.log(nextStep.signUpStep);
+        onStepChange(nextStep);
       }
-
-      const { nextStep } = await signUp({
-        username: email,
-        password: password,
-        options: {
-          userAttributes: {
-            email,
-          },
-          autoSignIn: true,
-        },
-      });
-
-      console.log(nextStep.signUpStep);
-      onStepChange(nextStep);
-    } catch (e) {
-      console.error(e);
-    }
+    });
   };
 
   return (

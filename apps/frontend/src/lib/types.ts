@@ -1,7 +1,8 @@
-import { SignUpOutput, SignInOutput } from "aws-amplify/auth";
+import { SignUpOutput, SignInOutput, AuthUser } from "aws-amplify/auth";
 
 export type ISignUpState = SignUpOutput["nextStep"];
 export type ISignInState = SignInOutput["nextStep"];
+export type IAuthUser = AuthUser;
 
 export type IRegisterFormData = {
   email: string;
