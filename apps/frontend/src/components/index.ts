@@ -6,3 +6,4 @@ export * from "./ConfirmSignUp";
 export * from "./LoginForm";
 export * from "./AppProvider";
 export * from "./Navbar";
+export * from "./TranslateCard";

@@ -89,7 +89,7 @@ export function UserNav() {
 export const Navbar = () => {
   const router = useRouter();
   return (
-    <div className="border-b">
+    <div className="border-b bg-white">
       <div className="flex h-16 items-center px-4">
         <h1
           className="font-semibold text-lg hover:underline"

@@ -2,12 +2,15 @@
 import { IAuthUser } from "@/lib";
 import React, { useContext, createContext, useState } from "react";
 import { useToast } from "./ui/use-toast";
+import { ITranslateResult } from "@sff/shared-types";
 
 type IAppContext = {
   user: IAuthUser | null | undefined;
   setUser: (user: IAuthUser | null) => void;
   setError: (msg: string) => void;
   resetError: () => void;
+  selectedTranslation: ITranslateResult | null;
+  setSelectedTranslation: (item: ITranslateResult) => void;
 };
 
 const AppContext = createContext<IAppContext>({
@@ -15,9 +18,13 @@ const AppContext = createContext<IAppContext>({
   setUser: (user) => {},
   setError: (msg) => {},
   resetError: () => {},
+  selectedTranslation: null,
+  setSelectedTranslation: (item: ITranslateResult) => {},
 });
 
 function useInitialApp(): IAppContext {
+  const [selectedTranslation, setSelectedTranslation] =
+    useState<ITranslateResult | null>(null);
   const [user, setUser] = useState<IAuthUser | null | undefined>(undefined);
   const { toast, dismiss } = useToast();
 
@@ -36,6 +43,8 @@ function useInitialApp(): IAppContext {
       // console.error("clear error");
       dismiss();
     },
+    selectedTranslation,
+    setSelectedTranslation,
   };
 }
 
